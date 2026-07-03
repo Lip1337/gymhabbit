@@ -32,7 +32,7 @@ export default function TrainingSession({ plan }: { plan: Plan }) {
   const allDone = total > 0 && completedCount === total;
 
   return (
-    <div className="flex flex-col p-4 bg-[#141A24] text-white rounded-xl border border-[#2E3A4E] gap-4 max-w-2xl mx-auto">
+    <div className="flex flex-col p-4 bg-[#141A24] text-white rounded-xl border border-[#2E3A4E] gap-4 w-full">
       {/* Header */}
       <div className="flex items-center gap-3">
         <button
