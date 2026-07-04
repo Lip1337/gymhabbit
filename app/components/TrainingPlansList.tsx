@@ -2,18 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Pencil } from "lucide-react";
+import { ChevronRight, Dumbbell, Pencil } from "lucide-react";
 import EditTrainingPlan from "./EditTrainingPlan";
+import type { Machine } from "./PlanFormFields";
 
 type Plan = {
   id: string;
   name: string;
-  data: {
-    name: string;
-    gewicht: number;
-    saetze: number;
-    wiederholungen: number;
-  }[];
+  data: Machine[];
 };
 
 export default function TrainingPlansList({ plans }: { plans: Plan[] }) {
@@ -21,26 +17,41 @@ export default function TrainingPlansList({ plans }: { plans: Plan[] }) {
 
   return (
     <>
-      <div className="flex justify-center items-center w-full gap-4 flex-wrap">
+      <div className="flex flex-col gap-2">
         {plans.map((plan) => (
-          <div
+          <Link
             key={plan.id}
-            className="relative bg-[#06B3E3] px-5 py-3 rounded-xl flex justify-center items-center group"
+            href={`/training/${plan.id}`}
+            className="group flex items-center gap-3 rounded-xl border border-line bg-sunken p-3 transition-colors hover:border-accent/60"
           >
-            <Link href={`/training/${plan.id}`} className="pr-2">
-              <p className="text-white font-semibold">{plan.name}</p>
-            </Link>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
+              <Dumbbell size={18} />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-semibold">{plan.name}</p>
+              <p className="text-sm text-muted">
+                {plan.data.length}{" "}
+                {plan.data.length === 1 ? "Übung" : "Übungen"}
+              </p>
+            </div>
+
             <button
               onClick={(e) => {
                 e.preventDefault();
                 setEditingPlan(plan);
               }}
-              className="ml-1 p-1 rounded-md hover:bg-white/20 transition-colors"
-              aria-label="Plan bearbeiten"
+              className="rounded-lg p-2 text-muted transition-colors hover:bg-white/5 hover:text-white"
+              aria-label={`${plan.name} bearbeiten`}
             >
-              <Pencil size={14} className="text-white" />
+              <Pencil size={16} />
             </button>
-          </div>
+
+            <ChevronRight
+              size={18}
+              className="text-faint transition-transform group-hover:translate-x-0.5 group-hover:text-accent"
+            />
+          </Link>
         ))}
       </div>
 

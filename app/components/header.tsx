@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { Dumbbell, LogOut, User } from "lucide-react";
 
 export default function Header() {
   const supabase = createClient();
@@ -51,25 +52,34 @@ export default function Header() {
   }
 
   return (
-    <motion.div
+    <motion.header
       initial={{ opacity: 0, y: -25, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{
         duration: 0.45,
         ease: [0.22, 1, 0.36, 1],
       }}
-      className="flex justify-between items-center p-4 bg-[#141A24] rounded-xl border border-[#2E3A4E]"
+      className="card flex items-center justify-between p-4"
     >
-      <p className="text-lg font-bold">GymHabbit</p>
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 text-accent">
+          <Dumbbell size={20} />
+        </div>
+        <div>
+          <p className="text-lg font-bold leading-tight">GymHabbit</p>
+          <p className="text-xs text-muted">Bleib dran. Jeden Tag.</p>
+        </div>
+      </div>
 
       <div className="relative" ref={dropdownRef}>
         <motion.button
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.92 }}
           onClick={() => setOpen(!open)}
-          className="border border-[#2E3A4E] rounded-xl p-2 hover:bg-[#1E2A38] transition-colors"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-line text-muted transition-colors hover:bg-white/5 hover:text-white"
+          aria-label="Konto"
         >
-          <img src="/user.svg" alt="User Icon" className="w-6 h-6" />
+          <User size={18} />
         </motion.button>
 
         <AnimatePresence>
@@ -82,30 +92,31 @@ export default function Header() {
                 duration: 0.2,
                 ease: "easeOut",
               }}
-              className="absolute right-0 mt-3 w-64 rounded-xl border border-[#2E3A4E] bg-[#141A24] shadow-2xl z-50 overflow-hidden"
+              className="card absolute right-0 z-50 mt-3 w-64 overflow-hidden shadow-2xl"
             >
               <div className="p-4">
-                <p className="text-xs text-gray-400 uppercase tracking-wider">
+                <p className="text-xs uppercase tracking-wider text-muted">
                   Eingeloggt als
                 </p>
 
-                <p className="mt-1 font-medium break-all text-white">
+                <p className="mt-1 break-all font-medium text-white">
                   {email}
                 </p>
               </div>
 
-              <div className="border-t border-[#2E3A4E]" />
+              <div className="border-t border-line" />
 
               <button
                 onClick={handleLogout}
-                className="w-full p-3 text-left text-red-400 hover:bg-[#1E2A38] transition-colors"
+                className="flex w-full items-center gap-2 p-3 text-left text-red-400 transition-colors hover:bg-white/5"
               >
+                <LogOut size={16} />
                 Logout
               </button>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-    </motion.div>
+    </motion.header>
   );
 }

@@ -1,5 +1,7 @@
 export default function Lip1337() {
   return (
-    <p className="text-center font-bold">Create with ♥️ by Lip1337</p>
-  )
+    <p className="pb-2 text-center text-sm text-faint">
+      Created with <span className="text-red-400">♥</span> by Lip1337
+    </p>
+  );
 }

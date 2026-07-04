@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import TrainingPlansList from "./TrainingPlansList";
+import CreateTraining from "./create_training";
 
 export default async function Training() {
   const cookieStore = await cookies();
@@ -15,20 +16,32 @@ export default async function Training() {
     return null;
   }
 
-  const { data, error } = await supabase.from("plans").select("*").eq("user", user.id);
+  const { data } = await supabase
+    .from("plans")
+    .select("*")
+    .eq("user", user.id)
+    .order("name");
+
+  const plans = data ?? [];
 
   return (
-    <div className="flex justify-between items-center flex-col p-4 bg-[#141A24] text-white rounded-xl border border-[#2E3A4E] gap-3">
-      <div className="flex justify-between items-center w-full">
-        <p className="text-lg font-bold">Training</p>
-        <div className="border border-[#2E3A4E] rounded-xl p-2">
-          <img src="/training.svg" alt="Training Icon" />
-        </div>
+    <section className="card flex flex-col gap-4 p-4">
+      <div className="flex items-center justify-between">
+        <p className="text-lg font-bold">Deine Trainingspläne</p>
+        <span className="rounded-full border border-line px-2.5 py-0.5 text-sm font-semibold text-muted">
+          {plans.length}
+        </span>
       </div>
 
-      <p className="font-semibold text-[#94A3B8]">Plan auswählen</p>
+      {plans.length === 0 ? (
+        <p className="text-sm text-muted">
+          Noch keine Pläne – erstelle unten deinen ersten Trainingsplan.
+        </p>
+      ) : (
+        <TrainingPlansList plans={plans} />
+      )}
 
-      <TrainingPlansList plans={data ?? []} />
-    </div>
+      <CreateTraining />
+    </section>
   );
 }

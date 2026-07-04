@@ -1,12 +1,12 @@
 import { redirect } from "next/navigation";
 
-import CreateTraining from "./components/create_training";
 import Header from "./components/header";
 import Lip1337 from "./components/lip1337";
 import Training from "./components/training";
+import TrainingHistory from "./components/TrainingHistory";
 
 import { createClient } from "@/utils/supabase/server";
-import { cookies } from 'next/headers'
+import { cookies } from "next/headers";
 
 export default async function Home() {
   const cookieStore = await cookies();
@@ -22,14 +22,16 @@ export default async function Home() {
   }
 
   return (
-    <div className="flex flex-col bg-[#0B0F19] text-white p-4 gap-4">
+    <div className="flex flex-1 flex-col gap-4 p-4">
       <Header />
 
       <Training />
 
-      <CreateTraining />
+      <TrainingHistory />
 
-      <Lip1337 />
+      <div className="mt-auto">
+        <Lip1337 />
+      </div>
     </div>
   );
 }
