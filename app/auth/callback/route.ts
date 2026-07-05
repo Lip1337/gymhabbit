@@ -15,7 +15,22 @@ export async function GET(request: Request) {
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`);
     }
+
+    console.error("[auth/callback] exchangeCodeForSession fehlgeschlagen:", error);
+    return NextResponse.redirect(
+      `${origin}/auth/login?error=${encodeURIComponent(error.message)}`,
+    );
   }
 
-  return NextResponse.redirect(`${origin}/auth/login?error=auth-fehlgeschlagen`);
+  const errorDescription =
+    searchParams.get("error_description") ?? searchParams.get("error");
+  console.error(
+    "[auth/callback] Kein code-Parameter erhalten.",
+    errorDescription ?? "(keine Fehlermeldung vom Provider)",
+  );
+  return NextResponse.redirect(
+    `${origin}/auth/login?error=${encodeURIComponent(
+      errorDescription ?? "kein-code-erhalten",
+    )}`,
+  );
 }
