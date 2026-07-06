@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
+import type { WeightUnit } from "@/utils/settings";
 
 export type Machine = {
   name: string;
@@ -20,6 +21,7 @@ export default function PlanFormFields({
   onAddMachine,
   onRemoveMachine,
   onUpdateMachine,
+  unit = "kg",
 }: {
   planName: string;
   onPlanNameChange: (value: string) => void;
@@ -27,6 +29,7 @@ export default function PlanFormFields({
   onAddMachine: () => void;
   onRemoveMachine: (index: number) => void;
   onUpdateMachine: (index: number, field: keyof Machine, value: string) => void;
+  unit?: WeightUnit;
 }) {
   return (
     <>
@@ -81,7 +84,7 @@ export default function PlanFormFields({
 
               <div className="grid grid-cols-3 gap-2">
                 <div className="flex flex-col gap-1">
-                  <span className="text-xs text-muted">Gewicht (kg)</span>
+                  <span className="text-xs text-muted">Gewicht ({unit})</span>
                   <input
                     type="number"
                     value={machine.gewicht}

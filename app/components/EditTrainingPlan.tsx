@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/client";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import PlanFormFields, { Machine, emptyMachine } from "./PlanFormFields";
+import { useSettings } from "@/utils/useSettings";
 
 type Plan = {
   id: string;
@@ -19,6 +20,8 @@ export default function EditTrainingPlan({
   plan: Plan;
   onClose: () => void;
 }) {
+  const { settings } = useSettings();
+
   const [planName, setPlanName] = useState(plan.name);
   const [machines, setMachines] = useState<Machine[]>(
     plan.data.length > 0 ? plan.data : [emptyMachine()]
@@ -31,7 +34,15 @@ export default function EditTrainingPlan({
   const router = useRouter();
 
   const addMachine = () => {
-    setMachines([...machines, emptyMachine()]);
+    setMachines([
+      ...machines,
+      {
+        name: "",
+        gewicht: settings.defaultWeight,
+        saetze: settings.defaultSets,
+        wiederholungen: settings.defaultReps,
+      },
+    ]);
   };
 
   const removeMachine = (index: number) => {
@@ -145,6 +156,7 @@ export default function EditTrainingPlan({
           onAddMachine={addMachine}
           onRemoveMachine={removeMachine}
           onUpdateMachine={updateMachine}
+          unit={settings.unit}
         />
 
         {error && <p className="text-sm text-red-400">{error}</p>}

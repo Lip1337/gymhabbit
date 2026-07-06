@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Trophy } from "lucide-react";
+import { ArrowLeft, Check, Plus, Trophy, X } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+import { useSettings } from "@/utils/useSettings";
 
 type Machine = {
   name: string;
@@ -18,28 +19,90 @@ type Plan = {
   data: Machine[];
 };
 
+type SetEntry = {
+  gewicht: number;
+  wiederholungen: number;
+};
+
+type Progress = {
+  done: boolean;
+  sets: SetEntry[];
+};
+
 export default function TrainingSession({ plan }: { plan: Plan }) {
   const router = useRouter();
   const supabase = createClient();
-  const [done, setDone] = useState<boolean[]>(plan.data.map(() => false));
+  const { settings } = useSettings();
+  const [progress, setProgress] = useState<Progress[]>(
+    plan.data.map((machine) => ({
+      done: false,
+      sets: Array.from({ length: Math.max(1, machine.saetze) }, () => ({
+        gewicht: machine.gewicht,
+        wiederholungen: machine.wiederholungen,
+      })),
+    })),
+  );
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // Stabile ID für diese Trainingseinheit, damit erneutes Speichern die Session aktualisiert.
+  const sessionIdRef = useRef<string>(crypto.randomUUID());
 
-  const toggle = (index: number) => {
-    const updated = [...done];
-    updated[index] = !updated[index];
-    setDone(updated);
-
-    const total = plan.data.length;
-    const completedCount = updated.filter(Boolean).length;
-    if (total > 0 && completedCount === total) {
-      saveSession(updated);
-    }
+  const updateSet = (
+    exerciseIndex: number,
+    setIndex: number,
+    field: "gewicht" | "wiederholungen",
+    value: number,
+  ) => {
+    setProgress((prev) =>
+      prev.map((item, i) =>
+        i === exerciseIndex
+          ? {
+              ...item,
+              sets: item.sets.map((set, s) =>
+                s === setIndex ? { ...set, [field]: Math.max(0, value) } : set,
+              ),
+            }
+          : item,
+      ),
+    );
   };
 
-  const saveSession = async (finalDone: boolean[]) => {
-    if (saved || saving) return;
+  const addSet = (exerciseIndex: number) => {
+    setProgress((prev) =>
+      prev.map((item, i) => {
+        if (i !== exerciseIndex) return item;
+        const last = item.sets[item.sets.length - 1];
+        return {
+          ...item,
+          sets: [...item.sets, last ? { ...last } : { gewicht: 0, wiederholungen: 0 }],
+        };
+      }),
+    );
+  };
+
+  const removeSet = (exerciseIndex: number, setIndex: number) => {
+    setProgress((prev) =>
+      prev.map((item, i) =>
+        i === exerciseIndex && item.sets.length > 1
+          ? { ...item, sets: item.sets.filter((_, s) => s !== setIndex) }
+          : item,
+      ),
+    );
+  };
+
+  const toggle = (index: number) => {
+    setProgress((prev) =>
+      prev.map((item, i) =>
+        i === index ? { ...item, done: !item.done } : item,
+      ),
+    );
+  };
+
+  const saveSession = async (finalProgress: Progress[], goHome = false) => {
+    if (saving) return;
     setSaving(true);
+    setErrorMsg(null);
 
     const {
       data: { user },
@@ -47,26 +110,41 @@ export default function TrainingSession({ plan }: { plan: Plan }) {
 
     if (!user) {
       setSaving(false);
+      setErrorMsg("Nicht angemeldet – bitte neu einloggen.");
       return;
     }
 
-    const { error } = await supabase.from("workout_sessions").insert({
+    const exercises = plan.data.map((machine, index) => ({
+      ...machine,
+      done: finalProgress[index].done,
+      sets: finalProgress[index].sets,
+      saetze_geschafft: finalProgress[index].sets.length,
+    }));
+
+    // Insert oder Update in einem: gleiche id => bestehende Session wird aktualisiert.
+    const { error } = await supabase.from("workout_sessions").upsert({
+      id: sessionIdRef.current,
       user: user.id,
       plan_id: plan.id,
       plan_name: plan.name,
-      exercises: plan.data.map((machine, index) => ({
-        ...machine,
-        done: finalDone[index],
-      })),
+      exercises,
     });
 
     setSaving(false);
-    if (!error) {
-      setSaved(true);
+
+    if (error) {
+      setErrorMsg(error.message);
+      return;
+    }
+
+    setSaved(true);
+    if (goHome) {
+      router.push("/");
+      router.refresh();
     }
   };
 
-  const completedCount = done.filter(Boolean).length;
+  const completedCount = progress.filter((item) => item.done).length;
   const total = plan.data.length;
   const allDone = total > 0 && completedCount === total;
   const percent = total > 0 ? Math.round((completedCount / total) * 100) : 0;
@@ -104,64 +182,147 @@ export default function TrainingSession({ plan }: { plan: Plan }) {
       {/* Übungsliste */}
       <div className="flex flex-col gap-3">
         {plan.data.map((machine, index) => {
-          const isDone = done[index];
+          const item = progress[index];
+          const isDone = item.done;
           return (
-            <button
+            <div
               key={index}
-              onClick={() => toggle(index)}
-              className={`flex items-center justify-between gap-3 rounded-2xl border p-4 text-left transition-colors ${
-                isDone
-                  ? "border-accent bg-accent/10"
-                  : "border-line bg-surface hover:border-faint"
+              className={`flex flex-col gap-3 rounded-2xl border p-4 transition-colors ${
+                isDone ? "border-accent bg-accent/10" : "border-line bg-surface"
               }`}
             >
-              <div className="flex min-w-0 flex-col gap-1.5">
-                <p
-                  className={`truncate font-semibold ${
-                    isDone ? "text-accent line-through" : "text-white"
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 flex-col gap-1.5">
+                  <p
+                    className={`truncate font-semibold ${
+                      isDone ? "text-accent" : "text-white"
+                    }`}
+                  >
+                    {machine.name}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 text-xs font-medium text-muted">
+                    <span className="rounded-md bg-sunken px-2 py-0.5">
+                      Ziel: {machine.gewicht} {settings.unit} · {machine.saetze} ×{" "}
+                      {machine.wiederholungen}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => toggle(index)}
+                  aria-label={isDone ? "Als offen markieren" : "Als erledigt markieren"}
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                    isDone
+                      ? "border-accent bg-accent"
+                      : "border-faint hover:border-accent"
                   }`}
                 >
-                  {machine.name}
-                </p>
-                <div className="flex flex-wrap gap-1.5 text-xs font-medium text-muted">
-                  <span className="rounded-md bg-sunken px-2 py-0.5">
-                    {machine.gewicht} kg
-                  </span>
-                  <span className="rounded-md bg-sunken px-2 py-0.5">
-                    {machine.saetze} Sätze
-                  </span>
-                  <span className="rounded-md bg-sunken px-2 py-0.5">
-                    {machine.wiederholungen} Wdh.
-                  </span>
-                </div>
+                  {isDone && <Check size={15} className="text-white" />}
+                </button>
               </div>
 
-              <div
-                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-colors ${
-                  isDone ? "border-accent bg-accent" : "border-faint"
-                }`}
-              >
-                {isDone && <Check size={15} className="text-white" />}
+              {/* Sätze */}
+              <div className="flex flex-col gap-2">
+                {/* Spaltenüberschriften */}
+                <div className="flex items-center gap-2 px-1 text-xs font-medium text-muted">
+                  <span className="w-10 shrink-0">Satz</span>
+                  <span className="flex-1 text-center">
+                    Gewicht ({settings.unit})
+                  </span>
+                  <span className="flex-1 text-center">Wdh.</span>
+                  <span className="w-7 shrink-0" />
+                </div>
+
+                {item.sets.map((set, setIndex) => (
+                  <div key={setIndex} className="flex items-center gap-2">
+                    <span className="flex h-9 w-10 shrink-0 items-center justify-center rounded-lg bg-sunken text-sm font-semibold text-muted">
+                      {setIndex + 1}
+                    </span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min={0}
+                      value={set.gewicht}
+                      onChange={(e) =>
+                        updateSet(
+                          index,
+                          setIndex,
+                          "gewicht",
+                          parseFloat(e.target.value) || 0,
+                        )
+                      }
+                      className="h-9 w-full flex-1 rounded-xl border border-line bg-sunken px-3 text-center text-sm font-semibold text-white outline-none transition-colors focus:border-accent"
+                    />
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      value={set.wiederholungen}
+                      onChange={(e) =>
+                        updateSet(
+                          index,
+                          setIndex,
+                          "wiederholungen",
+                          parseInt(e.target.value) || 0,
+                        )
+                      }
+                      className="h-9 w-full flex-1 rounded-xl border border-line bg-sunken px-3 text-center text-sm font-semibold text-white outline-none transition-colors focus:border-accent"
+                    />
+                    <button
+                      onClick={() => removeSet(index, setIndex)}
+                      disabled={item.sets.length <= 1}
+                      aria-label="Satz entfernen"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-white/5 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+
+                <button
+                  onClick={() => addSet(index)}
+                  className="flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-line py-2 text-xs font-medium text-muted transition-colors hover:border-accent hover:text-accent"
+                >
+                  <Plus size={14} />
+                  Satz hinzufügen
+                </button>
               </div>
-            </button>
+            </div>
           );
         })}
       </div>
 
       {allDone && (
-        <div className="card flex flex-col items-center gap-3 border-accent/40 p-6">
+        <div className="card flex flex-col items-center gap-2 border-accent/40 p-6">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/15 text-accent">
             <Trophy size={24} />
           </div>
-          <p className="font-semibold text-accent">Training abgeschlossen!</p>
-          <p className="text-sm text-muted">
-            {saving ? "Wird gespeichert…" : saved ? "Im Verlauf gespeichert" : ""}
-          </p>
-          <button onClick={() => router.push("/")} className="btn-primary">
-            Zurück zur Übersicht
-          </button>
+          <p className="font-semibold text-accent">Alle Übungen erledigt!</p>
         </div>
       )}
+
+      {/* Speichern */}
+      <div className="mt-auto flex flex-col gap-2">
+        {errorMsg && (
+          <p className="rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-center text-xs text-red-400">
+            Speichern fehlgeschlagen: {errorMsg}
+          </p>
+        )}
+        <p className="text-center text-xs text-muted">
+          {saving
+            ? "Wird gespeichert…"
+            : saved
+              ? "Im Verlauf gespeichert – Änderungen werden übernommen"
+              : "Trage dein Gewicht und deine Wiederholungen pro Satz ein"}
+        </p>
+        <button
+          onClick={() => saveSession(progress, true)}
+          disabled={saving}
+          className="btn-primary disabled:opacity-60"
+        >
+          {saved ? "Speichern & beenden" : "Training beenden & speichern"}
+        </button>
+      </div>
     </div>
   );
 }

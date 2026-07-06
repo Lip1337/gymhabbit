@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Dumbbell, LogOut, User } from "lucide-react";
+import Link from "next/link";
+import { Dumbbell, LogOut, Settings, User } from "lucide-react";
 
 export default function Header() {
   const supabase = createClient();
@@ -71,16 +72,25 @@ export default function Header() {
         </div>
       </div>
 
-      <div className="relative" ref={dropdownRef}>
-        <motion.button
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.92 }}
-          onClick={() => setOpen(!open)}
+      <div className="flex items-center gap-2">
+        <Link
+          href="/settings"
           className="flex h-10 w-10 items-center justify-center rounded-xl border border-line text-muted transition-colors hover:bg-white/5 hover:text-white"
-          aria-label="Konto"
+          aria-label="Einstellungen"
         >
-          <User size={18} />
-        </motion.button>
+          <Settings size={18} />
+        </Link>
+
+        <div className="relative" ref={dropdownRef}>
+          <motion.button
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.92 }}
+            onClick={() => setOpen(!open)}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-line text-muted transition-colors hover:bg-white/5 hover:text-white"
+            aria-label="Konto"
+          >
+            <User size={18} />
+          </motion.button>
 
         <AnimatePresence>
           {open && (
@@ -106,6 +116,17 @@ export default function Header() {
 
               <div className="border-t border-line" />
 
+              <Link
+                href="/settings"
+                onClick={() => setOpen(false)}
+                className="flex w-full items-center gap-2 p-3 text-left text-muted transition-colors hover:bg-white/5 hover:text-white"
+              >
+                <Settings size={16} />
+                Einstellungen
+              </Link>
+
+              <div className="border-t border-line" />
+
               <button
                 onClick={handleLogout}
                 className="flex w-full items-center gap-2 p-3 text-left text-red-400 transition-colors hover:bg-white/5"
@@ -116,6 +137,7 @@ export default function Header() {
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
       </div>
     </motion.header>
   );

@@ -4,20 +4,37 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { Plus, X } from "lucide-react";
-import PlanFormFields, { Machine, emptyMachine } from "./PlanFormFields";
+import PlanFormFields, { Machine } from "./PlanFormFields";
+import { useSettings } from "@/utils/useSettings";
 
 export default function CreateTraining() {
+  const { settings } = useSettings();
+
+  const newMachine = (): Machine => ({
+    name: "",
+    gewicht: settings.defaultWeight,
+    saetze: settings.defaultSets,
+    wiederholungen: settings.defaultReps,
+  });
+
   const [isOpen, setIsOpen] = useState(false);
   const [planName, setPlanName] = useState("");
-  const [machines, setMachines] = useState<Machine[]>([emptyMachine()]);
+  const [machines, setMachines] = useState<Machine[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const supabase = createClient();
   const router = useRouter();
 
+  const handleOpen = () => {
+    setPlanName("");
+    setMachines([newMachine()]);
+    setError(null);
+    setIsOpen(true);
+  };
+
   const addMachine = () => {
-    setMachines([...machines, emptyMachine()]);
+    setMachines([...machines, newMachine()]);
   };
 
   const removeMachine = (index: number) => {
@@ -33,15 +50,11 @@ export default function CreateTraining() {
     setMachines(updated);
   };
 
-  const resetForm = () => {
-    setPlanName("");
-    setMachines([emptyMachine()]);
-    setError(null);
-  };
-
   const handleClose = () => {
     setIsOpen(false);
-    resetForm();
+    setPlanName("");
+    setMachines([]);
+    setError(null);
   };
 
   const handleSave = async () => {
@@ -91,7 +104,7 @@ export default function CreateTraining() {
   return (
     <>
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpen}
         className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-line p-3 font-semibold text-muted transition-colors hover:border-accent/60 hover:text-accent"
       >
         <Plus size={18} />
@@ -120,6 +133,7 @@ export default function CreateTraining() {
               onAddMachine={addMachine}
               onRemoveMachine={removeMachine}
               onUpdateMachine={updateMachine}
+              unit={settings.unit}
             />
 
             {error && <p className="text-sm text-red-400">{error}</p>}

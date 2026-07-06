@@ -4,7 +4,7 @@
 create table if not exists workout_sessions (
   id uuid primary key default gen_random_uuid(),
   "user" uuid not null references auth.users (id) on delete cascade,
-  plan_id uuid references plans (id) on delete set null,
+  plan_id bigint references plans (id) on delete set null,
   plan_name text not null,
   exercises jsonb not null,
   completed_at timestamptz not null default now()
@@ -27,7 +27,8 @@ alter table plans enable row level security;
 
 drop policy if exists "Users can manage their own plans" on plans;
 
+-- Die Spalte plans."user" ist vom Typ text/varchar, daher auth.uid() (uuid) zu text casten.
 create policy "Users can manage their own plans"
 on plans for all
-using (auth.uid() = "user")
-with check (auth.uid() = "user");
+using (auth.uid()::text = "user")
+with check (auth.uid()::text = "user");
