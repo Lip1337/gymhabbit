@@ -88,7 +88,7 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 px-4 py-4 lg:px-8">
+    <div className="w-full px-4 py-4 lg:relative lg:left-1/2 lg:w-screen lg:max-w-[100vw] lg:-translate-x-1/2 lg:px-8">
       <div className="mx-auto flex max-w-6xl flex-col gap-4">
         {/* Header */}
         <div className="card flex items-center gap-3 p-4">
@@ -138,7 +138,11 @@ export default async function DashboardPage() {
             <div className="grid gap-4 lg:grid-cols-2">
               <section className="card flex flex-col gap-3 p-4 lg:col-span-2">
                 <p className="font-bold">Volumen pro Training ({unit})</p>
-                <BarChart data={volume} />
+                <div className="-mx-1 overflow-x-auto px-1">
+                  <div className="min-w-[520px] lg:min-w-0">
+                    <BarChart data={volume} />
+                  </div>
+                </div>
               </section>
 
               <section className="card flex flex-col gap-3 p-4">
@@ -168,7 +172,9 @@ export default async function DashboardPage() {
                         <th className="pb-2 font-medium">Übung</th>
                         <th className="pb-2 text-right font-medium">Max ({unit})</th>
                         <th className="pb-2 text-right font-medium">Wdh.</th>
-                        <th className="pb-2 text-right font-medium">Beste Wdh.</th>
+                        <th className="hidden pb-2 text-right font-medium sm:table-cell">
+                          Beste Wdh.
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -183,7 +189,9 @@ export default async function DashboardPage() {
                           <td className="py-2 text-right text-muted">
                             {pr.repsAtMaxWeight}
                           </td>
-                          <td className="py-2 text-right text-muted">{pr.maxReps}</td>
+                          <td className="hidden py-2 text-right text-muted sm:table-cell">
+                            {pr.maxReps}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -199,7 +207,9 @@ export default async function DashboardPage() {
                       <tr className="text-left text-xs uppercase tracking-wider text-muted">
                         <th className="pb-2 font-medium">Datum</th>
                         <th className="pb-2 font-medium">Plan</th>
-                        <th className="pb-2 text-right font-medium">Übungen</th>
+                        <th className="hidden pb-2 text-right font-medium sm:table-cell">
+                          Übungen
+                        </th>
                         <th className="pb-2 text-right font-medium">Volumen</th>
                       </tr>
                     </thead>
@@ -212,7 +222,7 @@ export default async function DashboardPage() {
                           <td className="max-w-[9rem] truncate py-2 pr-2 font-medium">
                             {s.plan_name}
                           </td>
-                          <td className="py-2 text-right text-muted">
+                          <td className="hidden py-2 text-right text-muted sm:table-cell">
                             {Array.isArray(s.exercises) ? s.exercises.length : 0}
                           </td>
                           <td className="py-2 text-right font-semibold">

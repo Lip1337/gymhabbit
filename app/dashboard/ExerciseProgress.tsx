@@ -47,7 +47,11 @@ export default function ExerciseProgress({
           </span>
         </span>
       </div>
-      <LineChart data={data} />
+      <div className="-mx-1 overflow-x-auto px-1">
+        <div className="min-w-[520px] lg:min-w-0">
+          <LineChart data={data} />
+        </div>
+      </div>
     </div>
   );
 }
