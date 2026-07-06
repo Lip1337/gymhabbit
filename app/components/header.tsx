@@ -5,13 +5,21 @@ import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { Dumbbell, LogOut, Settings, User } from "lucide-react";
+import {
+  BarChart3,
+  Dumbbell,
+  LogOut,
+  Settings,
+  ShieldCheck,
+  User,
+} from "lucide-react";
 
 export default function Header() {
   const supabase = createClient();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -23,6 +31,13 @@ export default function Header() {
 
       if (user) {
         setEmail(user.email ?? "");
+
+        const { data: adminRow } = await supabase
+          .from("admins")
+          .select("user_id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        setIsAdmin(Boolean(adminRow));
       }
     }
 
@@ -73,6 +88,24 @@ export default function Header() {
       </div>
 
       <div className="flex items-center gap-2">
+        {isAdmin && (
+          <Link
+            href="/admin"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-line text-muted transition-colors hover:bg-white/5 hover:text-white"
+            aria-label="Admin"
+          >
+            <ShieldCheck size={18} />
+          </Link>
+        )}
+
+        <Link
+          href="/dashboard"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-line text-muted transition-colors hover:bg-white/5 hover:text-white"
+          aria-label="Dashboard"
+        >
+          <BarChart3 size={18} />
+        </Link>
+
         <Link
           href="/settings"
           className="flex h-10 w-10 items-center justify-center rounded-xl border border-line text-muted transition-colors hover:bg-white/5 hover:text-white"
@@ -115,6 +148,26 @@ export default function Header() {
               </div>
 
               <div className="border-t border-line" />
+
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  onClick={() => setOpen(false)}
+                  className="flex w-full items-center gap-2 p-3 text-left text-muted transition-colors hover:bg-white/5 hover:text-white"
+                >
+                  <ShieldCheck size={16} />
+                  Admin
+                </Link>
+              )}
+
+              <Link
+                href="/dashboard"
+                onClick={() => setOpen(false)}
+                className="flex w-full items-center gap-2 p-3 text-left text-muted transition-colors hover:bg-white/5 hover:text-white"
+              >
+                <BarChart3 size={16} />
+                Dashboard
+              </Link>
 
               <Link
                 href="/settings"
