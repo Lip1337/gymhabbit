@@ -2,6 +2,7 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { Geist } from "next/font/google";
 import type { Metadata, Viewport } from "next";
+import AddToHomeScreen from "./components/AddToHomeScreen";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -37,6 +38,7 @@ export default function RootLayout({
         <div className="mx-auto flex w-full max-w-lg flex-1 flex-col">
           {children}
         </div>
+        <AddToHomeScreen />
         <Analytics />
       </body>
     </html>

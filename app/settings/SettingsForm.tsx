@@ -239,8 +239,11 @@ export default function SettingsForm({ email }: { email: string }) {
             <span className="text-xs text-muted">Gewicht ({settings.unit})</span>
             <input
               type="number"
+              inputMode="decimal"
               min={0}
-              value={settings.defaultWeight}
+              value={settings.defaultWeight || ""}
+              placeholder="0"
+              onFocus={(e) => e.currentTarget.select()}
               onChange={(e) =>
                 update({ defaultWeight: Math.max(0, Number(e.target.value) || 0) })
               }
@@ -251,8 +254,11 @@ export default function SettingsForm({ email }: { email: string }) {
             <span className="text-xs text-muted">Sätze</span>
             <input
               type="number"
+              inputMode="numeric"
               min={0}
-              value={settings.defaultSets}
+              value={settings.defaultSets || ""}
+              placeholder="0"
+              onFocus={(e) => e.currentTarget.select()}
               onChange={(e) =>
                 update({ defaultSets: Math.max(0, Number(e.target.value) || 0) })
               }
@@ -263,8 +269,11 @@ export default function SettingsForm({ email }: { email: string }) {
             <span className="text-xs text-muted">Wdh.</span>
             <input
               type="number"
+              inputMode="numeric"
               min={0}
-              value={settings.defaultReps}
+              value={settings.defaultReps || ""}
+              placeholder="0"
+              onFocus={(e) => e.currentTarget.select()}
               onChange={(e) =>
                 update({ defaultReps: Math.max(0, Number(e.target.value) || 0) })
               }

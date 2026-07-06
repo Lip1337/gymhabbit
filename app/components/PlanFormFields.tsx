@@ -87,27 +87,36 @@ export default function PlanFormFields({
                   <span className="text-xs text-muted">Gewicht ({unit})</span>
                   <input
                     type="number"
-                    value={machine.gewicht}
+                    inputMode="decimal"
+                    value={machine.gewicht || ""}
+                    placeholder="0"
+                    onFocus={(e) => e.currentTarget.select()}
                     onChange={(e) => onUpdateMachine(index, "gewicht", e.target.value)}
-                    className="rounded-lg border border-line bg-surface px-2 py-1.5 text-white outline-none transition-colors focus:border-accent"
+                    className="rounded-lg border border-line bg-surface px-2 py-1.5 text-white outline-none transition-colors placeholder:text-faint focus:border-accent"
                   />
                 </div>
                 <div className="flex flex-col gap-1">
                   <span className="text-xs text-muted">Sätze</span>
                   <input
                     type="number"
-                    value={machine.saetze}
+                    inputMode="numeric"
+                    value={machine.saetze || ""}
+                    placeholder="0"
+                    onFocus={(e) => e.currentTarget.select()}
                     onChange={(e) => onUpdateMachine(index, "saetze", e.target.value)}
-                    className="rounded-lg border border-line bg-surface px-2 py-1.5 text-white outline-none transition-colors focus:border-accent"
+                    className="rounded-lg border border-line bg-surface px-2 py-1.5 text-white outline-none transition-colors placeholder:text-faint focus:border-accent"
                   />
                 </div>
                 <div className="flex flex-col gap-1">
                   <span className="text-xs text-muted">Wdh.</span>
                   <input
                     type="number"
-                    value={machine.wiederholungen}
+                    inputMode="numeric"
+                    value={machine.wiederholungen || ""}
+                    placeholder="0"
+                    onFocus={(e) => e.currentTarget.select()}
                     onChange={(e) => onUpdateMachine(index, "wiederholungen", e.target.value)}
-                    className="rounded-lg border border-line bg-surface px-2 py-1.5 text-white outline-none transition-colors focus:border-accent"
+                    className="rounded-lg border border-line bg-surface px-2 py-1.5 text-white outline-none transition-colors placeholder:text-faint focus:border-accent"
                   />
                 </div>
               </div>

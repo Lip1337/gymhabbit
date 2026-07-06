@@ -242,7 +242,9 @@ export default function TrainingSession({ plan }: { plan: Plan }) {
                       type="number"
                       inputMode="decimal"
                       min={0}
-                      value={set.gewicht}
+                      value={set.gewicht || ""}
+                      placeholder="0"
+                      onFocus={(e) => e.currentTarget.select()}
                       onChange={(e) =>
                         updateSet(
                           index,
@@ -251,13 +253,15 @@ export default function TrainingSession({ plan }: { plan: Plan }) {
                           parseFloat(e.target.value) || 0,
                         )
                       }
-                      className="h-9 w-full flex-1 rounded-xl border border-line bg-sunken px-3 text-center text-sm font-semibold text-white outline-none transition-colors focus:border-accent"
+                      className="h-9 w-full flex-1 rounded-xl border border-line bg-sunken px-3 text-center text-sm font-semibold text-white outline-none transition-colors placeholder:text-faint focus:border-accent"
                     />
                     <input
                       type="number"
                       inputMode="numeric"
                       min={0}
-                      value={set.wiederholungen}
+                      value={set.wiederholungen || ""}
+                      placeholder="0"
+                      onFocus={(e) => e.currentTarget.select()}
                       onChange={(e) =>
                         updateSet(
                           index,
@@ -266,7 +270,7 @@ export default function TrainingSession({ plan }: { plan: Plan }) {
                           parseInt(e.target.value) || 0,
                         )
                       }
-                      className="h-9 w-full flex-1 rounded-xl border border-line bg-sunken px-3 text-center text-sm font-semibold text-white outline-none transition-colors focus:border-accent"
+                      className="h-9 w-full flex-1 rounded-xl border border-line bg-sunken px-3 text-center text-sm font-semibold text-white outline-none transition-colors placeholder:text-faint focus:border-accent"
                     />
                     <button
                       onClick={() => removeSet(index, setIndex)}
