@@ -3,11 +3,18 @@
 import { Plus, Trash2 } from "lucide-react";
 import type { WeightUnit } from "@/utils/settings";
 
+export type SetEntry = {
+  gewicht: number;
+  wiederholungen: number;
+};
+
 export type Machine = {
   name: string;
   gewicht: number;
   saetze: number;
   wiederholungen: number;
+  // Pro-Satz-Werte, zuletzt im Training eingetragen. Optional/rückwärtskompatibel.
+  sets?: SetEntry[];
 };
 
 export function emptyMachine(): Machine {

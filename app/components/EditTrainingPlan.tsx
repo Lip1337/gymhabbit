@@ -66,7 +66,16 @@ export default function EditTrainingPlan({
       return;
     }
 
-    const validMachines = machines.filter((m) => m.name.trim() !== "");
+    const validMachines = machines
+      .filter((m) => m.name.trim() !== "")
+      // Manuelle Bearbeitung ist maßgeblich: gespeicherte Pro-Satz-Werte zurücksetzen,
+      // sie werden beim nächsten Training wieder neu aus den Sätzen aufgebaut.
+      .map((m) => ({
+        name: m.name,
+        gewicht: m.gewicht,
+        saetze: m.saetze,
+        wiederholungen: m.wiederholungen,
+      }));
     if (validMachines.length === 0) {
       setError("Bitte füge mindestens eine Übung hinzu.");
       return;

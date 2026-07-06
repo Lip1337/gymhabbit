@@ -6,22 +6,23 @@ import { ArrowLeft, Check, Plus, Trophy, X } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useSettings } from "@/utils/useSettings";
 
+type SetEntry = {
+  gewicht: number;
+  wiederholungen: number;
+};
+
 type Machine = {
   name: string;
   gewicht: number;
   saetze: number;
   wiederholungen: number;
+  sets?: SetEntry[];
 };
 
 type Plan = {
   id: string;
   name: string;
   data: Machine[];
-};
-
-type SetEntry = {
-  gewicht: number;
-  wiederholungen: number;
 };
 
 type Progress = {
@@ -36,10 +37,17 @@ export default function TrainingSession({ plan }: { plan: Plan }) {
   const [progress, setProgress] = useState<Progress[]>(
     plan.data.map((machine) => ({
       done: false,
-      sets: Array.from({ length: Math.max(1, machine.saetze) }, () => ({
-        gewicht: machine.gewicht,
-        wiederholungen: machine.wiederholungen,
-      })),
+      // Zuletzt gespeicherte Pro-Satz-Werte übernehmen, sonst aus den Zielwerten erzeugen.
+      sets:
+        machine.sets && machine.sets.length > 0
+          ? machine.sets.map((set) => ({
+              gewicht: set.gewicht,
+              wiederholungen: set.wiederholungen,
+            }))
+          : Array.from({ length: Math.max(1, machine.saetze) }, () => ({
+              gewicht: machine.gewicht,
+              wiederholungen: machine.wiederholungen,
+            })),
     })),
   );
   const [saved, setSaved] = useState(false);
@@ -130,10 +138,36 @@ export default function TrainingSession({ plan }: { plan: Plan }) {
       exercises,
     });
 
+    if (error) {
+      setSaving(false);
+      setErrorMsg(error.message);
+      return;
+    }
+
+    // Geschaffte Werte pro Satz in den Trainingsplan übernehmen. Einzelwerte
+    // (gewicht/wiederholungen) auf den ersten Satz syncen, damit Zusammenfassungen
+    // weiter funktionieren.
+    const updatedPlanData = plan.data.map((machine, index) => {
+      const sets = finalProgress[index].sets;
+      return {
+        ...machine,
+        sets,
+        saetze: sets.length,
+        gewicht: sets[0].gewicht,
+        wiederholungen: sets[0].wiederholungen,
+      };
+    });
+
+    const { error: planError } = await supabase
+      .from("plans")
+      .update({ data: updatedPlanData })
+      .eq("id", plan.id)
+      .eq("user", user.id);
+
     setSaving(false);
 
-    if (error) {
-      setErrorMsg(error.message);
+    if (planError) {
+      setErrorMsg(planError.message);
       return;
     }
 
