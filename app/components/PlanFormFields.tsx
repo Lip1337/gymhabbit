@@ -1,7 +1,9 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { ListPlus, Plus, Trash2 } from "lucide-react";
 import type { WeightUnit } from "@/utils/settings";
+import ExercisePicker from "./ExercisePicker";
 
 export type SetEntry = {
   gewicht: number;
@@ -38,6 +40,8 @@ export default function PlanFormFields({
   onUpdateMachine: (index: number, field: keyof Machine, value: string) => void;
   unit?: WeightUnit;
 }) {
+  const [pickerIndex, setPickerIndex] = useState<number | null>(null);
+
   return (
     <>
       {/* Plan Name */}
@@ -78,6 +82,14 @@ export default function PlanFormFields({
                   placeholder="Name der Übung"
                   className="flex-1 border-b border-line bg-transparent px-1 py-1 text-white outline-none transition-colors placeholder:text-faint focus:border-accent"
                 />
+                <button
+                  type="button"
+                  onClick={() => setPickerIndex(index)}
+                  className="shrink-0 rounded-lg border border-line p-1.5 text-muted transition-colors hover:border-accent hover:text-accent"
+                  aria-label="Übung aus Liste wählen"
+                >
+                  <ListPlus size={16} />
+                </button>
                 {machines.length > 1 && (
                   <button
                     onClick={() => onRemoveMachine(index)}
@@ -131,6 +143,13 @@ export default function PlanFormFields({
           ))}
         </div>
       </div>
+
+      {pickerIndex !== null && (
+        <ExercisePicker
+          onSelect={(name) => onUpdateMachine(pickerIndex, "name", name)}
+          onClose={() => setPickerIndex(null)}
+        />
+      )}
     </>
   );
 }
