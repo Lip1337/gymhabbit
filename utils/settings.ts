@@ -10,6 +10,7 @@ export type AppSettings = {
   defaultSets: number;
   defaultReps: number;
   defaultWeight: number;
+  showFriends: boolean;
 };
 
 export const SETTINGS_COOKIE = "gymhabbit_settings";
@@ -21,6 +22,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   defaultSets: 3,
   defaultReps: 10,
   defaultWeight: 20,
+  showFriends: true,
 };
 
 export const HISTORY_LIMIT_OPTIONS = [5, 10, 20, 50] as const;
@@ -50,6 +52,10 @@ export function parseSettings(raw: string | undefined | null): AppSettings {
         0,
         toInt(p.defaultWeight, DEFAULT_SETTINGS.defaultWeight),
       ),
+      showFriends:
+        typeof p.showFriends === "boolean"
+          ? p.showFriends
+          : DEFAULT_SETTINGS.showFriends,
     };
   } catch {
     return DEFAULT_SETTINGS;

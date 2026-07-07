@@ -4,6 +4,7 @@ import Header from "./components/header";
 import Lip1337 from "./components/lip1337";
 import Training from "./components/training";
 import TrainingHistory from "./components/TrainingHistory";
+import FriendsActivity from "./components/FriendsActivity";
 
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
@@ -26,6 +27,8 @@ export default async function Home() {
       <Header />
 
       <Training />
+
+      <FriendsActivity />
 
       <TrainingHistory />
 

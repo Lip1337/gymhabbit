@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Plus, Trophy, X } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
@@ -32,8 +32,38 @@ type Progress = {
 
 export default function TrainingSession({ plan }: { plan: Plan }) {
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const { settings } = useSettings();
+
+  // Live-Status für Freunde: beim Betreten "trainiert gerade" setzen, beim Verlassen löschen.
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user || !active) return;
+      await supabase
+        .from("profiles")
+        .upsert(
+          { id: user.id, training_since: new Date().toISOString() },
+          { onConflict: "id" },
+        );
+    })();
+    return () => {
+      active = false;
+      (async () => {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
+        await supabase
+          .from("profiles")
+          .update({ training_since: null })
+          .eq("id", user.id);
+      })();
+    };
+  }, [supabase]);
   const [progress, setProgress] = useState<Progress[]>(
     plan.data.map((machine) => ({
       done: false,

@@ -12,6 +12,7 @@ import {
   Settings,
   ShieldCheck,
   User,
+  Users,
 } from "lucide-react";
 
 export default function Header() {
@@ -88,31 +89,42 @@ export default function Header() {
       </div>
 
       <div className="flex items-center gap-2">
-        {isAdmin && (
+        {/* Schnell-Links: nur auf größeren Screens; auf dem Handy über das Menü. */}
+        <div className="hidden items-center gap-2 sm:flex">
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-line text-muted transition-colors hover:bg-white/5 hover:text-white"
+              aria-label="Admin"
+            >
+              <ShieldCheck size={18} />
+            </Link>
+          )}
+
           <Link
-            href="/admin"
+            href="/friends"
             className="flex h-10 w-10 items-center justify-center rounded-xl border border-line text-muted transition-colors hover:bg-white/5 hover:text-white"
-            aria-label="Admin"
+            aria-label="Freunde"
           >
-            <ShieldCheck size={18} />
+            <Users size={18} />
           </Link>
-        )}
 
-        <Link
-          href="/dashboard"
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-line text-muted transition-colors hover:bg-white/5 hover:text-white"
-          aria-label="Dashboard"
-        >
-          <BarChart3 size={18} />
-        </Link>
+          <Link
+            href="/dashboard"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-line text-muted transition-colors hover:bg-white/5 hover:text-white"
+            aria-label="Dashboard"
+          >
+            <BarChart3 size={18} />
+          </Link>
 
-        <Link
-          href="/settings"
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-line text-muted transition-colors hover:bg-white/5 hover:text-white"
-          aria-label="Einstellungen"
-        >
-          <Settings size={18} />
-        </Link>
+          <Link
+            href="/settings"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-line text-muted transition-colors hover:bg-white/5 hover:text-white"
+            aria-label="Einstellungen"
+          >
+            <Settings size={18} />
+          </Link>
+        </div>
 
         <div className="relative" ref={dropdownRef}>
           <motion.button
@@ -159,6 +171,15 @@ export default function Header() {
                   Admin
                 </Link>
               )}
+
+              <Link
+                href="/friends"
+                onClick={() => setOpen(false)}
+                className="flex w-full items-center gap-2 p-3 text-left text-muted transition-colors hover:bg-white/5 hover:text-white"
+              >
+                <Users size={16} />
+                Freunde
+              </Link>
 
               <Link
                 href="/dashboard"

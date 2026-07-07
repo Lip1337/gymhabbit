@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   ArrowLeft,
   Dumbbell,
@@ -10,6 +11,7 @@ import {
   LogOut,
   Scale,
   Trash2,
+  Users,
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useSettings } from "@/utils/useSettings";
@@ -200,6 +202,33 @@ export default function SettingsForm({ email }: { email: string }) {
             <p className="mt-2 text-center text-xs text-muted">{historyMsg}</p>
           )}
         </div>
+      </section>
+
+      {/* Freunde */}
+      <section className="card flex flex-col gap-4 p-4">
+        <div className="flex items-center gap-2">
+          <Users size={18} className="text-accent" />
+          <p className="font-bold">Freunde</p>
+        </div>
+
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="font-medium">Freunde-Karte anzeigen</p>
+            <p className="text-xs text-muted">
+              Zeigt auf der Startseite, wer gerade trainiert.
+            </p>
+          </div>
+          <Toggle
+            label="Freunde-Karte anzeigen"
+            checked={settings.showFriends}
+            onChange={(value) => update({ showFriends: value })}
+          />
+        </div>
+
+        <Link href="/friends" className="btn-ghost w-full">
+          <Users size={16} />
+          Freunde verwalten
+        </Link>
       </section>
 
       {/* Gewichtseinheit */}
