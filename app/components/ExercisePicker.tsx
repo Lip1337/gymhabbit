@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Plus, Search, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Info, Plus, Search, Trash2, X } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
 import {
   CURATED_EXERCISES,
   MUSCLE_GROUPS,
@@ -42,27 +43,71 @@ export default function ExercisePicker({
   onSelect: (name: string) => void;
   onClose: () => void;
 }) {
+  const supabase = useMemo(() => createClient(), []);
+
   const [filter, setFilter] = useState<Filter>("Alle");
   const [query, setQuery] = useState("");
   const [custom, setCustom] = useState<ExerciseEntry[]>(() => loadCustom());
+  const [dbExercises, setDbExercises] = useState<
+    { name: string; group: string; description: string | null }[]
+  >([]);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   const [newName, setNewName] = useState("");
   const [newGroup, setNewGroup] = useState<MuscleGroup>("Brust");
   const [showCreate, setShowCreate] = useState(false);
+
+  // Vom Admin angelegte Übungen (geteilter Katalog) laden.
+  useEffect(() => {
+    let active = true;
+    supabase
+      .from("exercises")
+      .select("name, muscle_group, description")
+      .then(({ data }) => {
+        if (!active || !data) return;
+        setDbExercises(
+          data.map((d) => ({
+            name: d.name as string,
+            group: d.muscle_group as string,
+            description: (d.description as string | null) ?? null,
+          })),
+        );
+      });
+    return () => {
+      active = false;
+    };
+  }, [supabase]);
 
   const customNames = useMemo(
     () => new Set(custom.map((e) => e.name.toLowerCase())),
     [custom],
   );
 
-  // Kuratierte + eigene Übungen, Duplikate (gleicher Name) zugunsten der eigenen entfernen.
-  const all = useMemo<ExerciseEntry[]>(
-    () => [
-      ...custom,
-      ...CURATED_EXERCISES.filter((e) => !customNames.has(e.name.toLowerCase())),
-    ],
-    [custom, customNames],
-  );
+  // Erklärungen aus dem Admin-Katalog nach Übungsname.
+  const descriptions = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const e of dbExercises) {
+      if (e.description) map.set(e.name.toLowerCase(), e.description);
+    }
+    return map;
+  }, [dbExercises]);
+
+  // Eigene + Admin-Katalog + kuratierte Liste, Duplikate nach Namen entfernen
+  // (Priorität: eigene > Admin > kuratiert).
+  const all = useMemo<ExerciseEntry[]>(() => {
+    const seen = new Set<string>();
+    const result: ExerciseEntry[] = [];
+    const push = (e: ExerciseEntry) => {
+      const key = e.name.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      result.push(e);
+    };
+    custom.forEach(push);
+    dbExercises.forEach((e) => push({ name: e.name, group: e.group as MuscleGroup }));
+    CURATED_EXERCISES.forEach(push);
+    return result;
+  }, [custom, dbExercises]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -149,34 +194,57 @@ export default function ExercisePicker({
           ) : (
             <div className="flex flex-col gap-1">
               {filtered.map((exercise) => {
-                const isCustom = customNames.has(exercise.name.toLowerCase());
+                const key = exercise.name.toLowerCase();
+                const isCustom = customNames.has(key);
+                const desc = descriptions.get(key);
+                const isOpen = expanded === exercise.name;
                 return (
                   <div
                     key={exercise.name}
-                    className="flex items-center gap-2 rounded-xl border border-line bg-sunken px-3 py-2.5"
+                    className="flex flex-col gap-2 rounded-xl border border-line bg-sunken px-3 py-2.5"
                   >
-                    <button
-                      onClick={() => {
-                        onSelect(exercise.name);
-                        onClose();
-                      }}
-                      className="flex min-w-0 flex-1 items-center gap-2 text-left"
-                    >
-                      <span className="min-w-0 flex-1 truncate font-medium">
-                        {exercise.name}
-                      </span>
-                      <span className="shrink-0 rounded-md bg-surface px-2 py-0.5 text-xs text-muted">
-                        {exercise.group}
-                      </span>
-                    </button>
-                    {isCustom && (
+                    <div className="flex items-center gap-2">
                       <button
-                        onClick={() => removeCustom(exercise.name)}
-                        className="shrink-0 rounded-lg p-1.5 text-muted transition-colors hover:bg-red-400/10 hover:text-red-400"
-                        aria-label="Eigene Übung löschen"
+                        onClick={() => {
+                          onSelect(exercise.name);
+                          onClose();
+                        }}
+                        className="flex min-w-0 flex-1 items-center gap-2 text-left"
                       >
-                        <Trash2 size={15} />
+                        <span className="min-w-0 flex-1 truncate font-medium">
+                          {exercise.name}
+                        </span>
+                        <span className="shrink-0 rounded-md bg-surface px-2 py-0.5 text-xs text-muted">
+                          {exercise.group}
+                        </span>
                       </button>
+                      {desc && (
+                        <button
+                          onClick={() =>
+                            setExpanded(isOpen ? null : exercise.name)
+                          }
+                          className={`shrink-0 rounded-lg p-1.5 transition-colors hover:bg-white/5 ${
+                            isOpen ? "text-accent" : "text-muted hover:text-white"
+                          }`}
+                          aria-label="Erklärung anzeigen"
+                        >
+                          <Info size={15} />
+                        </button>
+                      )}
+                      {isCustom && (
+                        <button
+                          onClick={() => removeCustom(exercise.name)}
+                          className="shrink-0 rounded-lg p-1.5 text-muted transition-colors hover:bg-red-400/10 hover:text-red-400"
+                          aria-label="Eigene Übung löschen"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      )}
+                    </div>
+                    {desc && isOpen && (
+                      <p className="whitespace-pre-wrap border-t border-line pt-2 text-sm text-muted">
+                        {desc}
+                      </p>
                     )}
                   </div>
                 );

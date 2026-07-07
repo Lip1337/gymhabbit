@@ -15,6 +15,7 @@ import {
   type WorkoutSession,
 } from "@/utils/stats";
 import AdminUsers, { type AdminUserRow } from "./AdminUsers";
+import AdminExercises from "./AdminExercises";
 
 export const metadata: Metadata = {
   title: "Admin",
@@ -168,6 +169,8 @@ export default async function AdminPage() {
           <p className="text-xs text-muted">Ohne Training</p>
         </div>
       </div>
+
+      <AdminExercises />
 
       <AdminUsers rows={rows} unit={unit} />
     </Shell>
